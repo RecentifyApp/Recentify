@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from openai import OpenAI
 import io
+import time
 
 # =====================================
 # PAGE CONFIG
@@ -13,7 +14,7 @@ st.set_page_config(
 )
 
 st.title("🔥 AITA Instagram Story Generator")
-st.write("Generate viral AITA stories involving Instagram follower tracker apps (without sounding like ads).")
+st.write("Generate short viral AITA stories involving Instagram follower tracker apps (max 1400 characters).")
 
 # =====================================
 # SIDEBAR SETTINGS
@@ -26,30 +27,8 @@ api_key = st.sidebar.text_input("Enter OpenAI API Key", type="password")
 num_stories = st.sidebar.slider(
     "Number of Stories",
     1,
-    20,
+    10,
     3
-)
-
-categories = st.sidebar.multiselect(
-    "Select Categories",
-    [
-        "Relationships",
-        "Marriage",
-        "Dating",
-        "Long Distance",
-        "Cheating Suspicion",
-        "Trust Issues",
-        "Jealousy",
-        "Ex Drama",
-        "Family Conflict",
-        "Friends Betrayal",
-        "Work Affair",
-        "Public Confrontation",
-        "Secrets Revealed",
-        "Double Life",
-        "Church / Community",
-        "Social Media Obsession"
-    ]
 )
 
 tone = st.sidebar.selectbox(
@@ -79,87 +58,61 @@ uploaded_file = st.file_uploader(
 )
 
 # =====================================
-# GENERATE FUNCTION
+# SINGLE STORY GENERATOR
 # =====================================
 
-def generate_stories(df, api_key, num_stories, categories, tone, mode):
+def generate_single_story(client, sample_data, tone, mode):
 
-    client = OpenAI(api_key=api_key)
-
-    sample_data = df.sample(min(15, len(df))).to_string()
-
-    # Framing control
     if mode == "Subtle (Recommended)":
         digital_instruction = """
-        Every story MUST mention using an Instagram follower tracker app.
-        The app must be mentioned only once.
-        The narrator must feel embarrassed, guilty, or slightly ashamed for using it.
+        The narrator must mention using an Instagram follower tracker app once.
+        The narrator must feel slightly embarrassed, insecure, or guilty for using it.
         Never praise the app.
         Never explain how it works.
-        Focus on emotional consequences, not the technology.
+        Focus on emotional consequences.
         """
     else:
         digital_instruction = """
-        Every story MUST clearly mention using an Instagram follower tracker app.
-        Mention it only once.
-        Do NOT praise it.
-        Do NOT explain how it works.
-        Keep the tone realistic, not promotional.
+        The narrator must clearly mention using an Instagram follower tracker app once.
+        Do not praise it.
+        Do not explain how it works.
+        Keep it realistic.
         """
 
     prompt = f"""
-You are a professional Reddit AITA storyteller.
+You are writing a Reddit AITA post.
 
-Study the viral examples below and learn:
-- Human imperfection
-- Emotional pacing
-- Suspicion build-up
-- Moral gray endings
-
-DATA:
+Study the style below:
 {sample_data}
 
-Generate {num_stories} completely new AITA stories.
+Write ONE new AITA story.
 
-MANDATORY RULES:
-1. Every story MUST involve Instagram.
-2. Every story MUST mention using an Instagram follower tracker app.
-3. Mention the app only once.
-4. No marketing tone.
-5. No promotion.
-6. No instructions.
-7. Must feel 100% human.
-8. 450-750 words.
-9. Start with "Throwaway because..."
-10. End with a clear AITA question.
+STRICT RULES:
+- Maximum 1400 characters total.
+- Include a TITLE.
+- Then write the STORY.
+- No timeline.
+- Must feel 100% human and imperfect.
+- Slight emotional instability is realistic.
+- Involve Instagram.
+- Must mention using an Instagram follower tracker app once.
+- No marketing tone.
+- No instructions.
+- Start story with "Throwaway because..."
+- End with a clear AITA question.
 
-Category focus: {categories}
 Tone: {tone}
 
 {digital_instruction}
-
-Format each story like this:
-
-===== STORY =====
-TITLE:
-FULL STORY:
-
-TIMELINE:
-- Event 1
-- Event 2
-- Escalation
-- Discovery
-- Confrontation
-- Final Dilemma
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.95,
+        temperature=1.05,
     )
 
-    return response.choices[0].message.content
+    return response.choices[0].message.content.strip()
 
 
 # =====================================
@@ -175,27 +128,44 @@ if st.button("🚀 Generate Stories"):
     else:
         try:
             df = pd.read_csv(uploaded_file)
+            sample_data = df.sample(min(10, len(df))).to_string()
 
-            with st.spinner("Generating high-viral Instagram stories..."):
-                stories_text = generate_stories(
-                    df,
-                    api_key,
-                    num_stories,
-                    categories,
-                    tone,
-                    mode
-                )
+            client = OpenAI(api_key=api_key)
 
-            st.success("Stories generated successfully ✅")
+            stories = []
 
-            st.text_area("Generated Stories", stories_text, height=600)
+            progress_bar = st.progress(0)
+            status_text = st.empty()
 
-            # Split stories for CSV export
-            stories_list = stories_text.split("===== STORY =====")
-            stories_list = [s.strip() for s in stories_list if s.strip()]
+            with st.spinner("Generating stories..."):
 
+                for i in range(num_stories):
+
+                    status_text.text(f"Generating story {i+1} of {num_stories}...")
+
+                    story = generate_single_story(
+                        client,
+                        sample_data,
+                        tone,
+                        mode
+                    )
+
+                    stories.append(story)
+
+                    progress_bar.progress((i + 1) / num_stories)
+                    time.sleep(0.2)
+
+            status_text.text("✅ All stories generated!")
+
+            final_output = "\n\n====================\n\n".join(stories)
+
+            st.success("Done 🚀")
+
+            st.text_area("Generated Stories", final_output, height=600)
+
+            # CSV Export
             export_df = pd.DataFrame({
-                "Generated Story": stories_list
+                "Generated Story": stories
             })
 
             csv_buffer = io.StringIO()
@@ -204,7 +174,7 @@ if st.button("🚀 Generate Stories"):
             st.download_button(
                 label="⬇ Download Stories as CSV",
                 data=csv_buffer.getvalue(),
-                file_name="generated_instagram_aita_stories.csv",
+                file_name="short_instagram_aita_stories.csv",
                 mime="text/csv"
             )
 
@@ -216,4 +186,4 @@ if st.button("🚀 Generate Stories"):
 # =====================================
 
 st.markdown("---")
-st.markdown("Built for Viral Instagram Suspicion Story Strategy 🚀")
+st.markdown("Built for Viral Instagram Suspicion Strategy 🚀")
