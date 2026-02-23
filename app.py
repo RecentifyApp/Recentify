@@ -3,21 +3,21 @@ import pandas as pd
 from openai import OpenAI
 import io
 
-# ===============================
+# =====================================
 # PAGE CONFIG
-# ===============================
+# =====================================
 
 st.set_page_config(
-    page_title="AITA Viral Story Generator Pro",
+    page_title="AITA Instagram Story Generator",
     layout="wide"
 )
 
-st.title("🔥 AITA Viral Story Generator Pro")
-st.write("Upload your viral dataset and generate high-converting AITA stories.")
+st.title("🔥 AITA Instagram Story Generator")
+st.write("Generate viral AITA stories involving Instagram follower tracker apps (without sounding like ads).")
 
-# ===============================
+# =====================================
 # SIDEBAR SETTINGS
-# ===============================
+# =====================================
 
 st.sidebar.header("⚙️ Settings")
 
@@ -37,27 +37,18 @@ categories = st.sidebar.multiselect(
         "Marriage",
         "Dating",
         "Long Distance",
-        "Work",
-        "Office Drama",
-        "Boss Conflict",
-        "Family",
-        "In-laws",
-        "Friends",
-        "Jealousy",
-        "Money Issues",
-        "Trust Issues",
         "Cheating Suspicion",
-        "Instagram Conflict",
-        "Social Media Secrets",
-        "Privacy",
+        "Trust Issues",
+        "Jealousy",
         "Ex Drama",
-        "Wedding Drama",
-        "Toxic Behavior",
-        "Control Issues",
+        "Family Conflict",
+        "Friends Betrayal",
+        "Work Affair",
         "Public Confrontation",
-        "Hidden Identity",
+        "Secrets Revealed",
         "Double Life",
-        "Secrets Revealed"
+        "Church / Community",
+        "Social Media Obsession"
     ]
 )
 
@@ -73,73 +64,93 @@ tone = st.sidebar.selectbox(
     ]
 )
 
-digital_mode = st.sidebar.checkbox("Enable Subtle Digital Suspicion Mode", value=True)
+mode = st.sidebar.radio(
+    "Digital Framing Mode",
+    ["Subtle (Recommended)", "Direct"]
+)
 
-# ===============================
+# =====================================
 # FILE UPLOAD
-# ===============================
+# =====================================
 
 uploaded_file = st.file_uploader(
-    "📂 Upload CSV File (must contain story column)",
+    "📂 Upload CSV File (must contain story text column)",
     type=["csv"]
 )
 
-# ===============================
+# =====================================
 # GENERATE FUNCTION
-# ===============================
+# =====================================
 
-def generate_stories(df, api_key, num_stories, categories, tone):
+def generate_stories(df, api_key, num_stories, categories, tone, mode):
 
     client = OpenAI(api_key=api_key)
 
     sample_data = df.sample(min(15, len(df))).to_string()
 
+    # Framing control
+    if mode == "Subtle (Recommended)":
+        digital_instruction = """
+        Every story MUST mention using an Instagram follower tracker app.
+        The app must be mentioned only once.
+        The narrator must feel embarrassed, guilty, or slightly ashamed for using it.
+        Never praise the app.
+        Never explain how it works.
+        Focus on emotional consequences, not the technology.
+        """
+    else:
+        digital_instruction = """
+        Every story MUST clearly mention using an Instagram follower tracker app.
+        Mention it only once.
+        Do NOT praise it.
+        Do NOT explain how it works.
+        Keep the tone realistic, not promotional.
+        """
+
     prompt = f"""
 You are a professional Reddit AITA storyteller.
 
-Study the viral stories below and learn:
+Study the viral examples below and learn:
+- Human imperfection
 - Emotional pacing
-- Human imperfections
-- Subtle tension build
+- Suspicion build-up
 - Moral gray endings
 
 DATA:
 {sample_data}
 
-Generate {num_stories} brand new AITA stories.
+Generate {num_stories} completely new AITA stories.
 
 MANDATORY RULES:
-
 1. Every story MUST involve Instagram.
 2. Every story MUST mention using an Instagram follower tracker app.
-3. The app must be mentioned ONLY ONCE.
-4. The app must NOT be praised.
-5. The narrator must feel slightly embarrassed or guilty for using it.
-6. Never explain how the app works.
-7. Never promote it.
-8. Never recommend it.
-9. Focus on emotional consequences of what was discovered.
-10. The story must feel 100% human and natural.
-11. No marketing tone.
-12. 400-700 words.
-13. Start with "Throwaway because..."
-14. End with a clear AITA question.
+3. Mention the app only once.
+4. No marketing tone.
+5. No promotion.
+6. No instructions.
+7. Must feel 100% human.
+8. 450-750 words.
+9. Start with "Throwaway because..."
+10. End with a clear AITA question.
 
 Category focus: {categories}
-Tone style: {tone}
+Tone: {tone}
 
-Structure:
+{digital_instruction}
+
+Format each story like this:
 
 ===== STORY =====
 TITLE:
 FULL STORY:
+
 TIMELINE:
 - Event 1
 - Event 2
 - Escalation
 - Discovery
 - Confrontation
-- Dilemma
+- Final Dilemma
 """
 
     response = client.chat.completions.create(
@@ -150,35 +161,36 @@ TIMELINE:
 
     return response.choices[0].message.content
 
-# ===============================
-# MAIN ACTION
-# ===============================
 
-if st.button("🚀 Generate Viral Stories"):
+# =====================================
+# MAIN BUTTON
+# =====================================
+
+if st.button("🚀 Generate Stories"):
 
     if not api_key:
-        st.error("Please enter OpenAI API Key.")
+        st.error("Please enter your OpenAI API Key.")
     elif not uploaded_file:
         st.error("Please upload a CSV file.")
     else:
         try:
             df = pd.read_csv(uploaded_file)
 
-            with st.spinner("Generating high-viral stories..."):
+            with st.spinner("Generating high-viral Instagram stories..."):
                 stories_text = generate_stories(
                     df,
                     api_key,
                     num_stories,
                     categories,
                     tone,
-                    digital_mode
+                    mode
                 )
 
             st.success("Stories generated successfully ✅")
 
             st.text_area("Generated Stories", stories_text, height=600)
 
-            # Convert to CSV
+            # Split stories for CSV export
             stories_list = stories_text.split("===== STORY =====")
             stories_list = [s.strip() for s in stories_list if s.strip()]
 
@@ -192,16 +204,16 @@ if st.button("🚀 Generate Viral Stories"):
             st.download_button(
                 label="⬇ Download Stories as CSV",
                 data=csv_buffer.getvalue(),
-                file_name="generated_aita_stories.csv",
+                file_name="generated_instagram_aita_stories.csv",
                 mime="text/csv"
             )
 
         except Exception as e:
             st.error(f"Error: {e}")
 
-# ===============================
+# =====================================
 # FOOTER
-# ===============================
+# =====================================
 
 st.markdown("---")
-st.markdown("Built for High-Converting Viral Story Marketing 🚀")
+st.markdown("Built for Viral Instagram Suspicion Story Strategy 🚀")
