@@ -118,21 +118,22 @@ uploaded_file = st.file_uploader(
 
 def generate_single_story(client, sample_data, tone, mode, categories):
 
-    if mode == "Subtle (Recommended)":
-        digital_instruction = """
-        Mention using an Instagram follower tracking app once.
-        The narrator should feel slightly embarrassed or guilty.
-        Do not explain how it works.
-        Do not promote it.
-        Focus on emotional consequences.
-        """
-    else:
-        digital_instruction = """
-        Mention using an Instagram follower tracking app once.
-        Do not explain how it works.
-        Do not promote it.
-        Keep tone realistic.
-        """
+    digital_instruction = """
+    The story must mention using an Instagram follower tracking app once.
+
+    The mention should be neutral and casual.
+    No guilt. No shame. No regret.
+    Do not praise the app.
+    Do not promote it.
+    Do not explain how it works step by step.
+
+    It is acceptable to describe noticing patterns such as:
+    - repeated follow and unfollow behavior
+    - new followers appearing late at night
+    - recognizing whether new followers are male or female
+
+    Keep focus on emotional conflict, not the technology.
+    """
 
     prompt = f"""
 You are writing a Reddit AITA post.
@@ -147,11 +148,10 @@ STRICT RULES:
 - Include a TITLE.
 - Then write the STORY.
 - No timeline.
-- Must feel messy and human.
-- Include self-doubt and overthinking.
-- Slight emotional instability is realistic.
+- Must feel human and natural.
+- Slight overthinking is realistic.
 - Must involve Instagram.
-- Mention using an Instagram follower tracking app once.
+- Must mention using an Instagram follower tracking app once.
 - No marketing tone.
 - Start story with "Throwaway because..."
 - End with a clear AITA question.
