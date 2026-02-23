@@ -29,57 +29,76 @@ num_stories = st.sidebar.slider("Number of Stories", 1, 10, 3)
 categories = st.sidebar.multiselect(
     "Select Categories",
     [
-        # Relationships
+        # General Core
+        "Relationships",
+        "Marriage",
+        "Dating",
+        "Family",
+        "Friends",
+        "Work",
+
+        # Relationship Conflicts
         "Cheating Suspicion",
         "Trust Issues",
         "Jealousy",
         "Long Distance",
         "Secret Ex",
+        "Ex Drama",
         "Emotional Affair",
         "Micro-Cheating",
         "Hidden Messages",
         "Second Account",
         "Late Night Activity",
+        "Toxic Behavior",
+        "Control Issues",
 
-        # Marriage
+        # Marriage Specific
         "Marriage Conflict",
         "Spouse Secrecy",
         "In-Laws Drama",
+        "In-laws",
         "Wedding Drama",
         "Engagement Doubt",
 
-        # Social Media
+        # Social Media / Digital
         "Instagram Conflict",
         "Follower Obsession",
         "Social Media Addiction",
+        "Social Media Secrets",
         "Online Flirting",
         "Deleted Comments",
+        "Privacy",
         "Public Image vs Private Reality",
+        "Hidden Identity",
 
-        # Friends
+        # Friends / Social Circle
         "Best Friend Betrayal",
         "Friend Group Drama",
         "Secret Hangouts",
 
-        # Family
+        # Family Specific
         "Sibling Rivalry",
         "Parent Interference",
         "Family Loyalty vs Truth",
 
-        # Work
+        # Work Specific
         "Work Affair",
+        "Office Drama",
         "Office Gossip",
+        "Boss Conflict",
         "Boss Boundary Issues",
+
+        # Financial
+        "Money Issues",
 
         # Psychological
         "Paranoia vs Reality",
         "Overthinking Spiral",
         "Obsession",
-        "Control Issues",
         "Double Life",
         "Secrets Revealed",
 
-        # Public
+        # Public / Exposure
         "Public Confrontation",
         "Community Scandal",
         "Event Showdown"
