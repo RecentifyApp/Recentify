@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 st.title("🔥 AITA Instagram Story Generator")
-st.write("Generate short viral AITA stories involving Instagram follower tracker apps (max 1400 characters).")
+st.write("Generate short viral AITA stories (max 1400 characters).")
 
 # =====================================
 # SIDEBAR SETTINGS
@@ -24,11 +24,66 @@ st.sidebar.header("⚙️ Settings")
 
 api_key = st.sidebar.text_input("Enter OpenAI API Key", type="password")
 
-num_stories = st.sidebar.slider(
-    "Number of Stories",
-    1,
-    10,
-    3
+num_stories = st.sidebar.slider("Number of Stories", 1, 10, 3)
+
+categories = st.sidebar.multiselect(
+    "Select Categories",
+    [
+        # Relationships
+        "Cheating Suspicion",
+        "Trust Issues",
+        "Jealousy",
+        "Long Distance",
+        "Secret Ex",
+        "Emotional Affair",
+        "Micro-Cheating",
+        "Hidden Messages",
+        "Second Account",
+        "Late Night Activity",
+
+        # Marriage
+        "Marriage Conflict",
+        "Spouse Secrecy",
+        "In-Laws Drama",
+        "Wedding Drama",
+        "Engagement Doubt",
+
+        # Social Media
+        "Instagram Conflict",
+        "Follower Obsession",
+        "Social Media Addiction",
+        "Online Flirting",
+        "Deleted Comments",
+        "Public Image vs Private Reality",
+
+        # Friends
+        "Best Friend Betrayal",
+        "Friend Group Drama",
+        "Secret Hangouts",
+
+        # Family
+        "Sibling Rivalry",
+        "Parent Interference",
+        "Family Loyalty vs Truth",
+
+        # Work
+        "Work Affair",
+        "Office Gossip",
+        "Boss Boundary Issues",
+
+        # Psychological
+        "Paranoia vs Reality",
+        "Overthinking Spiral",
+        "Obsession",
+        "Control Issues",
+        "Double Life",
+        "Secrets Revealed",
+
+        # Public
+        "Public Confrontation",
+        "Community Scandal",
+        "Event Showdown"
+    ]
 )
 
 tone = st.sidebar.selectbox(
@@ -61,22 +116,22 @@ uploaded_file = st.file_uploader(
 # SINGLE STORY GENERATOR
 # =====================================
 
-def generate_single_story(client, sample_data, tone, mode):
+def generate_single_story(client, sample_data, tone, mode, categories):
 
     if mode == "Subtle (Recommended)":
         digital_instruction = """
-        The narrator must mention using an Instagram follower tracker app once.
-        The narrator must feel slightly embarrassed, insecure, or guilty for using it.
-        Never praise the app.
-        Never explain how it works.
+        Mention using an Instagram follower tracking app once.
+        The narrator should feel slightly embarrassed or guilty.
+        Do not explain how it works.
+        Do not promote it.
         Focus on emotional consequences.
         """
     else:
         digital_instruction = """
-        The narrator must clearly mention using an Instagram follower tracker app once.
-        Do not praise it.
+        Mention using an Instagram follower tracking app once.
         Do not explain how it works.
-        Keep it realistic.
+        Do not promote it.
+        Keep tone realistic.
         """
 
     prompt = f"""
@@ -85,23 +140,23 @@ You are writing a Reddit AITA post.
 Study the style below:
 {sample_data}
 
-Write ONE new AITA story.
+Write ONE brand new AITA story.
 
 STRICT RULES:
-- Maximum 1400 characters total.
+- Maximum 1400 characters.
 - Include a TITLE.
 - Then write the STORY.
 - No timeline.
-- Must feel 100% human and imperfect.
+- Must feel messy and human.
+- Include self-doubt and overthinking.
 - Slight emotional instability is realistic.
-- Involve Instagram.
-- Must mention using an Instagram follower tracker app once.
+- Must involve Instagram.
+- Mention using an Instagram follower tracking app once.
 - No marketing tone.
-- No instructions.
 - Start story with "Throwaway because..."
 - End with a clear AITA question.
-
-Tone: {tone}
+- Category focus: {categories}
+- Tone: {tone}
 
 {digital_instruction}
 """
@@ -147,7 +202,8 @@ if st.button("🚀 Generate Stories"):
                         client,
                         sample_data,
                         tone,
-                        mode
+                        mode,
+                        categories
                     )
 
                     stories.append(story)
@@ -164,15 +220,13 @@ if st.button("🚀 Generate Stories"):
             st.text_area("Generated Stories", final_output, height=600)
 
             # CSV Export
-            export_df = pd.DataFrame({
-                "Generated Story": stories
-            })
+            export_df = pd.DataFrame({"Generated Story": stories})
 
             csv_buffer = io.StringIO()
             export_df.to_csv(csv_buffer, index=False)
 
             st.download_button(
-                label="⬇ Download Stories as CSV",
+                "⬇ Download Stories as CSV",
                 data=csv_buffer.getvalue(),
                 file_name="short_instagram_aita_stories.csv",
                 mime="text/csv"
