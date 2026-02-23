@@ -88,63 +88,58 @@ uploaded_file = st.file_uploader(
 # GENERATE FUNCTION
 # ===============================
 
-def generate_stories(df, api_key, num_stories, categories, tone, digital_mode):
+def generate_stories(df, api_key, num_stories, categories, tone):
 
     client = OpenAI(api_key=api_key)
 
     sample_data = df.sample(min(15, len(df))).to_string()
 
-    digital_instruction = ""
-    if digital_mode:
-        digital_instruction = """
-If digital clues are involved:
-- Imply tracking patterns without explaining tools.
-- Never name apps.
-- Never teach methods.
-- Focus on emotional consequences of discovering patterns.
-"""
-
     prompt = f"""
 You are a professional Reddit AITA storyteller.
 
-Study the viral dataset below and learn:
+Study the viral stories below and learn:
 - Emotional pacing
-- Natural Reddit tone
-- Conflict build-up
-- Moral ambiguity
-- Viral tension structure
+- Human imperfections
+- Subtle tension build
+- Moral gray endings
 
 DATA:
 {sample_data}
 
 Generate {num_stories} brand new AITA stories.
 
-Rules:
-- Start with "Throwaway because..."
-- 400-700 words each
-- Must feel 100% human
-- No marketing tone
-- Realistic conflict
-- Strong viral tension
-- Category focus: {categories}
-- Tone: {tone}
-{digital_instruction}
+MANDATORY RULES:
 
-STRUCTURE EACH STORY LIKE THIS:
+1. Every story MUST involve Instagram.
+2. Every story MUST mention using an Instagram follower tracker app.
+3. The app must be mentioned ONLY ONCE.
+4. The app must NOT be praised.
+5. The narrator must feel slightly embarrassed or guilty for using it.
+6. Never explain how the app works.
+7. Never promote it.
+8. Never recommend it.
+9. Focus on emotional consequences of what was discovered.
+10. The story must feel 100% human and natural.
+11. No marketing tone.
+12. 400-700 words.
+13. Start with "Throwaway because..."
+14. End with a clear AITA question.
+
+Category focus: {categories}
+Tone style: {tone}
+
+Structure:
 
 ===== STORY =====
 TITLE:
 FULL STORY:
-
 TIMELINE:
-- Event 1:
-- Event 2:
-- Event 3:
-- Escalation:
-- Turning Point:
-- Final Dilemma:
-
-End with AITA question.
+- Event 1
+- Event 2
+- Escalation
+- Discovery
+- Confrontation
+- Dilemma
 """
 
     response = client.chat.completions.create(
