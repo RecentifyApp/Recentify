@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 st.title("🔥 AITA Instagram Story Generator")
-st.write("Generate short viral AITA stories (max 1400 characters).")
+st.write("Generate short viral AITA stories (max 1400 characters, unlimited angles).")
 
 # =====================================
 # SIDEBAR SETTINGS
@@ -29,79 +29,40 @@ num_stories = st.sidebar.slider("Number of Stories", 1, 10, 3)
 categories = st.sidebar.multiselect(
     "Select Categories",
     [
-        # General Core
-        "Relationships",
-        "Marriage",
-        "Dating",
-        "Family",
-        "Friends",
-        "Work",
+        # General
+        "Relationships", "Marriage", "Dating", "Family", "Friends", "Work",
 
-        # Relationship Conflicts
-        "Cheating Suspicion",
-        "Trust Issues",
-        "Jealousy",
-        "Long Distance",
-        "Secret Ex",
-        "Ex Drama",
-        "Emotional Affair",
-        "Micro-Cheating",
-        "Hidden Messages",
-        "Second Account",
-        "Late Night Activity",
-        "Toxic Behavior",
-        "Control Issues",
+        # Relationship
+        "Cheating Suspicion", "Trust Issues", "Jealousy", "Long Distance",
+        "Secret Ex", "Ex Drama", "Emotional Affair", "Micro-Cheating",
+        "Hidden Messages", "Second Account", "Late Night Activity",
+        "Toxic Behavior", "Control Issues",
 
-        # Marriage Specific
-        "Marriage Conflict",
-        "Spouse Secrecy",
-        "In-Laws Drama",
-        "In-laws",
-        "Wedding Drama",
-        "Engagement Doubt",
+        # Marriage
+        "Marriage Conflict", "Spouse Secrecy", "In-Laws Drama",
+        "Wedding Drama", "Engagement Doubt",
 
-        # Social Media / Digital
-        "Instagram Conflict",
-        "Follower Obsession",
-        "Social Media Addiction",
-        "Social Media Secrets",
-        "Online Flirting",
-        "Deleted Comments",
-        "Privacy",
-        "Public Image vs Private Reality",
-        "Hidden Identity",
+        # Social Media
+        "Instagram Conflict", "Follower Obsession", "Social Media Addiction",
+        "Social Media Secrets", "Online Flirting", "Deleted Comments",
+        "Privacy", "Public Image vs Private Reality", "Hidden Identity",
 
-        # Friends / Social Circle
-        "Best Friend Betrayal",
-        "Friend Group Drama",
-        "Secret Hangouts",
+        # Friends
+        "Best Friend Betrayal", "Friend Group Drama", "Secret Hangouts",
 
-        # Family Specific
-        "Sibling Rivalry",
-        "Parent Interference",
-        "Family Loyalty vs Truth",
+        # Family
+        "Sibling Rivalry", "Parent Interference", "Family Loyalty vs Truth",
 
-        # Work Specific
-        "Work Affair",
-        "Office Drama",
-        "Office Gossip",
-        "Boss Conflict",
-        "Boss Boundary Issues",
-
-        # Financial
-        "Money Issues",
+        # Work
+        "Work Affair", "Office Drama", "Office Gossip",
+        "Boss Conflict", "Boss Boundary Issues",
 
         # Psychological
-        "Paranoia vs Reality",
-        "Overthinking Spiral",
-        "Obsession",
-        "Double Life",
-        "Secrets Revealed",
+        "Paranoia vs Reality", "Overthinking Spiral", "Obsession",
+        "Double Life", "Secrets Revealed",
 
-        # Public / Exposure
-        "Public Confrontation",
-        "Community Scandal",
-        "Event Showdown"
+        # Public
+        "Public Confrontation", "Community Scandal", "Event Showdown"
     ]
 )
 
@@ -117,11 +78,6 @@ tone = st.sidebar.selectbox(
     ]
 )
 
-mode = st.sidebar.radio(
-    "Digital Framing Mode",
-    ["Subtle (Recommended)", "Direct"]
-)
-
 # =====================================
 # FILE UPLOAD
 # =====================================
@@ -132,58 +88,67 @@ uploaded_file = st.file_uploader(
 )
 
 # =====================================
-# SINGLE STORY GENERATOR
+# STORY GENERATOR FUNCTION
 # =====================================
 
-def generate_single_story(client, sample_data, tone, mode, categories):
+def generate_single_story(client, sample_data, tone, categories, used_summaries):
 
     digital_instruction = """
-    The story must mention using an Instagram follower tracking app once.
-
-    The mention should be neutral and casual.
-    No guilt. No shame. No regret.
-    Do not praise the app.
+    Mention using an Instagram follower tracking app once.
+    Do not explain how it works.
     Do not promote it.
-    Do not explain how it works step by step.
+    Keep focus on emotional conflict.
+    """
 
-    It is acceptable to describe noticing patterns such as:
-    - repeated follow and unfollow behavior
-    - new followers appearing late at night
-    - recognizing whether new followers are male or female
+    creativity_instruction = f"""
+    Create a completely UNIQUE scenario.
 
-    Keep focus on emotional conflict, not the technology.
+    Avoid repeating themes from:
+    {used_summaries}
+
+    You must vary:
+    - Main character role (parent, sibling, spouse, coworker, friend, etc.)
+    - Type of suspicion
+    - Type of discovery
+    - Type of confrontation
+    - Emotional ending
+
+    Use unexpected twists.
+    Make readers divided.
     """
 
     prompt = f"""
 You are writing a Reddit AITA post.
 
-Study the style below:
+Study this style:
 {sample_data}
 
-Write ONE brand new AITA story.
+Write ONE viral AITA story.
 
 STRICT RULES:
-- Maximum 1400 characters.
-- Include a TITLE.
-- Then write the STORY.
-- No timeline.
-- Must feel human and natural.
-- Slight overthinking is realistic.
-- Must involve Instagram.
-- Must mention using an Instagram follower tracking app once.
-- No marketing tone.
+- Max 1400 characters
+- Include TITLE
+- Then STORY
+- No timeline
+- Messy, imperfect human tone
+- Slight overthinking is realistic
+- Must involve Instagram
+- Must mention using an Instagram follower tracking app once
+- No marketing tone
 - Start story with "Throwaway because..."
-- End with a clear AITA question.
+- End with a clear AITA question
 - Category focus: {categories}
 - Tone: {tone}
 
 {digital_instruction}
+
+{creativity_instruction}
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        temperature=1.05,
+        temperature=1.25
     )
 
     return response.choices[0].message.content.strip()
@@ -202,43 +167,42 @@ if st.button("🚀 Generate Stories"):
     else:
         try:
             df = pd.read_csv(uploaded_file)
-            sample_data = df.sample(min(10, len(df))).to_string()
+            sample_data = df.sample(min(15, len(df))).to_string()
 
             client = OpenAI(api_key=api_key)
 
             stories = []
+            used_summaries = []
 
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            with st.spinner("Generating stories..."):
+            for i in range(num_stories):
 
-                for i in range(num_stories):
+                status_text.text(f"Generating story {i+1} of {num_stories}...")
 
-                    status_text.text(f"Generating story {i+1} of {num_stories}...")
+                story = generate_single_story(
+                    client,
+                    sample_data,
+                    tone,
+                    categories,
+                    used_summaries
+                )
 
-                    story = generate_single_story(
-                        client,
-                        sample_data,
-                        tone,
-                        mode,
-                        categories
-                    )
+                stories.append(story)
+                used_summaries.append(story[:300])
 
-                    stories.append(story)
-
-                    progress_bar.progress((i + 1) / num_stories)
-                    time.sleep(0.2)
+                progress_bar.progress((i + 1) / num_stories)
+                time.sleep(0.2)
 
             status_text.text("✅ All stories generated!")
 
             final_output = "\n\n====================\n\n".join(stories)
 
             st.success("Done 🚀")
-
             st.text_area("Generated Stories", final_output, height=600)
 
-            # CSV Export
+            # CSV export
             export_df = pd.DataFrame({"Generated Story": stories})
 
             csv_buffer = io.StringIO()
@@ -247,7 +211,7 @@ if st.button("🚀 Generate Stories"):
             st.download_button(
                 "⬇ Download Stories as CSV",
                 data=csv_buffer.getvalue(),
-                file_name="short_instagram_aita_stories.csv",
+                file_name="viral_instagram_aita_stories.csv",
                 mime="text/csv"
             )
 
@@ -259,4 +223,4 @@ if st.button("🚀 Generate Stories"):
 # =====================================
 
 st.markdown("---")
-st.markdown("Built for Viral Instagram Suspicion Strategy 🚀")
+st.markdown("Unlimited Angles Viral Story Engine 🚀")
